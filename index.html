@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NIGHT AT ROC — UST</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<!-- ==================== INTRO LAYER ==================== -->
+<div id="app">
+  <canvas id="glcanvas"></canvas>
+  <div class="vignette"></div>
+  <canvas id="fx"></canvas>
+  <div id="crosshair"></div>
+  <div id="objective" class="gone"></div>
+
+  <div id="loginHud" class="gone">
+    <div class="lh-text">&#9654; LOG&nbsp;IN</div>
+    <div class="lh-sub">walk to your workstation</div>
+    <div class="lh-dist" id="lhDist">&mdash; m</div>
+  </div>
+
+  <div id="loader"><div class="ring"></div><p>Booting ROC Environment&hellip;</p></div>
+
+  <div id="airlock" class="gone">
+    <div class="door door-l"><div class="door-detail"><div class="dline"></div><div class="dline"></div><div class="dline"></div></div></div>
+    <div class="door door-r"><div class="door-detail"><div class="dline"></div><div class="dline"></div><div class="dline"></div></div></div>
+    <div class="airlock-seam"></div>
+    <div class="airlock-label"><span id="airlockText">&#9700; ROC ACCESS &middot; AUTHORISED &#9701;</span></div>
+  </div>
+
+  <div id="warpMsg" class="overlay gone">
+    <div class="w-main">Ah&hellip; we're snapping into the system</div>
+    <div class="w-sub">Establishing Neural Uplink</div>
+  </div>
+
+  <div id="enter" class="overlay gone">
+    <div class="enter-box">
+      <h1>NIGHT AT&nbsp;ROC</h1>
+      <div class="sub">UST</div>
+      <div class="go">&#9654; CLICK TO ENTER THE FLOOR</div>
+    </div>
+  </div>
+
+  <div id="tutorial" class="overlay gone">
+    <div class="hint-card">
+      <h3>Move to your PC &amp; log in</h3>
+      <p><span class="keys">WASD</span> or <span class="keys">Arrow keys</span> to move &middot; <span class="keys">Mouse</span> to look around</p>
+      <p style="margin-top:8px">Walk into the glowing <b style="color:var(--cyan)">LOG&nbsp;IN</b> desk ahead</p>
+    </div>
+  </div>
+
+  <div id="nameOverlay" class="overlay gone">
+    <div class="terminal">
+      <div class="bar"><span class="b-red"></span><span class="b-amb"></span><span class="b-grn"></span></div>
+      <div class="line">&gt; ROC-TERMINAL v4.2 &nbsp;// node: TRV-NOC-07</div>
+      <div class="line">&gt; authenticating operator&hellip;</div>
+      <div class="line">&gt; biometric handshake OK</div>
+      <div class="prompt">ENTER YOUR NAME:<span class="blink">_</span></div>
+      <input id="nameField" type="text" maxlength="18" placeholder="operator" autocomplete="off" />
+      <div id="nameErr" class="err-msg"></div>
+      <button id="nameSubmit">&#9654; Begin Shift</button>
+    </div>
+  </div>
+
+  <div id="menu" class="overlay gone">
+    <div id="titleWrap">
+      <div id="gameTitle">NIGHT<br>AT ROC</div>
+      <div id="titleSub"></div>
+    </div>
+    <div id="menuPanel">
+      <div class="profile">
+        <div class="avatar" id="avatar">?</div>
+        <div class="pinfo"><div class="plabel">Operator</div><div class="pname" id="profileName">&mdash;</div></div>
+        <button class="edit" id="editBtn">Edit</button>
+      </div>
+      <button class="menu-btn primary" id="startBtn">&#9654; Start Game</button>
+      <button class="menu-btn" id="multiBtn">&#9876; Local 2-Player</button>
+      <button class="menu-btn" id="leaderboardBtn">&#127942; Leaderboard</button>
+      <button class="menu-btn" id="instrBtn">Instructions</button>
+    </div>
+  </div>
+
+  <div id="p2Modal" class="overlay gone">
+    <div class="terminal" style="width:min(460px,90vw)">
+      <div class="bar"><span class="b-red"></span><span class="b-amb"></span><span class="b-grn"></span></div>
+      <div class="line">&gt; init local multiplayer</div>
+      <div class="prompt">ENTER PLAYER 2 NAME:<span class="blink">_</span></div>
+      <input id="p2Field" type="text" maxlength="18" autocomplete="off" />
+      <div id="p2Err" class="err-msg"></div>
+      <div style="display:flex;gap:12px;margin-top:18px">
+        <button id="p2Cancel" style="flex:1;padding:12px;background:transparent;color:var(--cyan);border:1px solid var(--cyan-dim);border-radius:6px;font-family:var(--mono);letter-spacing:2px;cursor:pointer;text-transform:uppercase">Cancel</button>
+        <button id="p2Start" style="flex:1;padding:12px;background:var(--cyan);color:#04121c;border:none;border-radius:6px;font-family:var(--mono);font-weight:700;letter-spacing:2px;cursor:pointer;text-transform:uppercase">Start Match</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="editModal" class="overlay gone">
+    <div class="terminal" style="width:min(460px,90vw)">
+      <div class="bar"><span class="b-red"></span><span class="b-amb"></span><span class="b-grn"></span></div>
+      <div class="line">&gt; operator profile &middot; edit</div>
+      <div class="prompt">EDIT YOUR NAME:<span class="blink">_</span></div>
+      <input id="editField" type="text" maxlength="18" autocomplete="off" />
+      <div id="editErr" class="err-msg"></div>
+      <div style="display:flex;gap:12px;margin-top:18px">
+        <button id="editCancel" style="flex:1;padding:12px;background:transparent;color:var(--cyan);border:1px solid var(--cyan-dim);border-radius:6px;font-family:var(--mono);letter-spacing:2px;cursor:pointer;text-transform:uppercase">Cancel</button>
+        <button id="editSave" style="flex:1;padding:12px;background:var(--cyan);color:#04121c;border:none;border-radius:6px;font-family:var(--mono);font-weight:700;letter-spacing:2px;cursor:pointer;text-transform:uppercase">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="instrModal" class="overlay gone">
+    <div class="modal-card">
+      <h2>Mission Briefing</h2>
+      <div class="msub">3 PHASES &middot; 60 SECONDS &middot; DEFEND THE CORE</div>
+      <div class="phase"><div class="num">1</div><div><h4>Purge (FPS) &middot; 0&ndash;20s</h4><p>WASD or Arrow keys to move, mouse to aim, click to shoot intruders. <b style="color:var(--green)">+10</b> per intruder purged, <b style="color:var(--red)">&minus;5</b> if one reaches you.</p></div></div>
+      <div class="phase"><div class="num">2</div><div><h4>Firewall (Sort) &middot; 20&ndash;40s</h4><p>A/&#8592; routes malware to EXTERNAL, D/&#8594; routes safe traffic to INTERNAL. Each correct route = <b style="color:var(--cyan)">+5 &times; your combo streak</b> &rarr; +5, +10, +15, +20, +25 (capped at +25). A wrong route or missed packet: <b style="color:var(--red)">&minus;5</b> and the combo resets to zero.</p></div></div>
+      <div class="phase"><div class="num">3</div><div><h4>Defend (Typing) &middot; 40&ndash;60s</h4><p>Type malware words to fire lasers. <b style="color:var(--green)">+15</b> per word, <b style="color:var(--green)">+50</b> per boss destroyed, <b style="color:var(--red)">&minus;3</b> per wrong key.</p></div></div>
+      <div class="phase" style="border-color:rgba(43,255,136,.3)"><div class="num">&#9733;</div><div><h4>Survival Bonus</h4><p>When the shift ends, remaining <b style="color:var(--green)">Core Integrity &times; 0.5</b> is added. Score freezes instantly at 0 seconds.</p></div></div>
+      <button class="modal-close" id="closeModal">Understood</button>
+    </div>
+  </div>
+
+  <!-- leaderboard modal (main menu) -->
+  <div id="lbModal" class="overlay gone">
+    <div class="modal-card">
+      <div class="lb-head">
+        <h2 style="margin:0">&#127942; Top 10</h2>
+        <span class="lb-note">Local &middot; This Device Only</span>
+      </div>
+      <div class="lb-list" id="lbList"></div>
+      <div class="lb-btnrow">
+        <button class="lb-clear" id="lbClear">Clear</button>
+        <button class="lb-done" id="lbClose">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- victory epilogue -->
+  <div id="victory" class="overlay gone">
+    <div class="vic-card">
+      <h2>&#10003; Core Secured</h2>
+      <div class="vic-sub">Shift Complete &middot; ROC Stable</div>
+      <div class="vic-scorelabel">Final Score</div>
+      <div class="vic-score" id="victoryScore">0</div>
+      <div class="vic-pb" id="victoryPB">Personal Best: 0</div>
+      <div class="vic-op">Operator: <b id="victoryName" style="color:var(--cyan)">&mdash;</b></div>
+      <div class="vic-stats">
+        <div class="st"><div class="v" id="vsPurge">0</div><div class="l">Purged</div></div>
+        <div class="st"><div class="v" id="vsAcc">0%</div><div class="l">Sort Acc</div></div>
+        <div class="st"><div class="v" id="vsWords">0</div><div class="l">Words</div></div>
+      </div>
+      <div class="vic-btns">
+        <button class="menu-btn win primary" id="victoryReplay">&#9654; Play Again</button>
+        <button class="menu-btn win" id="victoryLb">&#127942; View Leaderboard</button>
+        <button class="menu-btn win" id="victoryMenu">Return to Menu</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== GAMEPLAY LAYER ==================== -->
+<div id="gameApp">
+  <div id="hud" class="g-off">
+    <div class="hud-col">
+      <div class="hud-label">ENGINEER</div>
+      <div id="hud-name" class="hud-big blue">&mdash;</div>
+      <div id="hud-health">
+        <div class="hud-label" style="margin-top:.5rem">CORE INTEGRITY</div>
+        <div class="health-bar"><div id="health-fill"></div></div>
+      </div>
+    </div>
+    <div class="hud-col center">
+      <div class="hud-label">PHASE</div>
+      <div id="hud-mode" class="hud-big blue">PURGE</div>
+      <div class="hud-label" style="margin-top:.5rem">TIME</div>
+      <div id="hud-time" class="hud-big green">60</div>
+    </div>
+    <div class="hud-col right"></div>
+  </div>
+
+  <div id="score-container" class="g-off">
+    <div>
+      <div class="hud-label">TOTAL SCORE</div>
+      <div id="hud-score" class="hud-big pink">0</div>
+    </div>
+    <div style="margin-top:.5rem">
+      <div class="hud-label">PHASE SCORE</div>
+      <div id="hud-phase-score" class="hud-big blue">0</div>
+    </div>
+    <div id="hud-combo-box" style="display:none; text-align:right; margin-top:.5rem;">
+      <div class="hud-label">COMBO</div>
+      <div id="hud-combo" class="hud-big green">x1</div>
+    </div>
+  </div>
+
+  <div id="game-crosshair" class="g-off">
+    <div class="crosshair-dot"></div>
+    <div class="crosshair-tick top"></div>
+    <div class="crosshair-tick bottom"></div>
+    <div class="crosshair-tick left"></div>
+    <div class="crosshair-tick right"></div>
+  </div>
+  <div id="damage-flash"></div>
+  <h1 id="banner" class="glitch-text"></h1>
+
+  <button id="pause-btn" class="g-off">&#10073;&#10073; PAUSE <span class="tab-key">TAB</span></button>
+
+  <div id="screen-pause" class="screen g-off">
+    <div class="pause-card">
+      <div class="pause-title">PAUSED</div>
+      <div class="pause-hint">Shift Suspended &middot; Press TAB to resume</div>
+      <div class="pause-live">
+        <div class="pl"><div class="v" id="pauseScore">0</div><div class="l">Score</div></div>
+        <div class="pl"><div class="v" id="pausePhase">Purge</div><div class="l">Phase</div></div>
+        <div class="pl"><div class="v" id="pauseTime">60</div><div class="l">Time</div></div>
+      </div>
+      <div class="pause-actions">
+        <button id="btn-resume" class="pbtn primary">&#9654; Resume</button>
+        <button id="btn-plb" class="pbtn">&#127942; Leaderboard</button>
+        <button id="btn-pinstr" class="pbtn">Instructions</button>
+        <div class="pbtn-row">
+          <button id="btn-prestart" class="pbtn two">&#8635; Restart</button>
+          <button id="btn-pmenu" class="pbtn two danger">Menu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="pause-instr" class="screen g-off">
+    <div class="modal-card" style="animation:none">
+      <h2>Mission Briefing</h2>
+      <div class="msub">3 PHASES &middot; 60 SECONDS &middot; DEFEND THE CORE</div>
+      <div class="phase"><div class="num">1</div><div><h4>Purge (FPS)</h4><p>WASD or Arrow keys to move, mouse to aim, click to shoot intruders. +10 per kill, &minus;5 if one reaches you.</p></div></div>
+      <div class="phase"><div class="num">2</div><div><h4>Firewall (Sort)</h4><p>A/&#8592; routes malware to EXTERNAL, D/&#8594; routes safe traffic to INTERNAL. Each correct route = +5 &times; your combo streak &rarr; +5, +10, +15, +20, +25 (capped at +25). A wrong route or missed packet: &minus;5 and the combo resets to zero.</p></div></div>
+      <div class="phase"><div class="num">3</div><div><h4>Defend (Typing)</h4><p>Type malware words to fire lasers. +15 per word, +50 per boss, &minus;3 per wrong key. Hold the core and you warp back to UST.</p></div></div>
+      <div class="phase" style="border-color:rgba(34,230,255,.35)"><div class="num">&#9208;</div><div><h4>Controls</h4><p>Press <b style="color:var(--cyan)">TAB</b> anytime to pause / resume. Click the on-screen <b style="color:var(--cyan)">PAUSE</b> button in the Sort &amp; Defend phases.</p></div></div>
+      <button class="modal-close" id="btn-pinstr-close">Back to Pause</button>
+    </div>
+  </div>
+
+  <div id="pause-lb" class="screen g-off">
+    <div class="modal-card" style="animation:none">
+      <div class="lb-head">
+        <h2 style="margin:0">&#127942; Top 10</h2>
+        <span class="lb-note">Local &middot; This Device Only</span>
+      </div>
+      <div class="lb-list" id="pauseLbList"></div>
+      <div class="lb-btnrow">
+        <button class="lb-clear" id="pauseLbClear">Clear</button>
+        <button class="lb-done" id="pauseLbClose">Back to Pause</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="sort-controls" class="g-off">
+    <div id="gate-trash" class="sort-gate">&#8592; EXTERNAL (A / &#8592;)</div>
+    <div id="gate-allow" class="sort-gate">INTERNAL (D / &#8594;) &#8594;</div>
+  </div>
+
+  <div id="screen-end" class="screen g-off">
+    <h1 id="end-title" class="glitch-text title-xl">SYSTEM COMPROMISED</h1>
+    <p id="end-status" class="end-status mono">STATUS: &mdash;</p>
+    <p id="end-name" class="end-name mono">ENGINEER: &mdash;</p>
+    <p id="end-score" class="end-score mono">FINAL SCORE: 0</p>
+    <p id="end-pb" class="end-pb mono">PERSONAL BEST: 0</p>
+    <div class="end-stats">
+      <div class="st"><div class="v" id="esPurge">0</div><div class="l">Purged</div></div>
+      <div class="st"><div class="v" id="esAcc">0%</div><div class="l">Sort Acc</div></div>
+      <div class="st"><div class="v" id="esWords">0</div><div class="l">Words</div></div>
+    </div>
+    <div class="end-btns">
+      <button id="btn-restart" class="btn">TRY AGAIN</button>
+      <button id="btn-endlb" class="btn">LEADERBOARD</button>
+      <button id="btn-menu" class="btn">MENU</button>
+    </div>
+  </div>
+
+  <div id="screen-intermission" class="screen g-off">
+    <h1 class="glitch-text title-xl" style="color:var(--cyan)">SHIFT COMPLETE</h1>
+    <p class="end-status mono" id="inter-p1-score" style="font-size:1.5rem; margin-top:1rem;">PLAYER 1 SCORE: 0</p>
+    <div style="margin:2.5rem 0; text-align:center;">
+      <p class="end-name mono" style="color:var(--amber); font-size:1.4rem;">GET READY, <span id="inter-p2-name">PLAYER 2</span>!</p>
+    </div>
+    <button id="btn-start-p2" class="btn" style="background:var(--amber); color:#000; border-color:var(--amber);">BEGIN PLAYER 2 SHIFT</button>
+  </div>
+
+  <div id="screen-multi-result" class="screen g-off">
+    <h1 id="multi-winner-title" class="glitch-text title-xl" style="color:var(--amber)">PLAYER 1 WINS!</h1>
+    <div style="display:flex; gap:2rem; margin:2rem 0; width:100%; max-width:640px; justify-content:center;">
+      
+      <div style="flex:1; background:rgba(34,230,255,0.05); border:1px solid var(--neon-blue); padding:1.5rem; border-radius:12px; text-align:center;">
+        <div class="hud-label" id="res-p1-name" style="color:#fff; font-size:1rem;">PLAYER 1</div>
+        <div class="hud-big blue" id="res-p1-score" style="margin:0.8rem 0; font-size:2.5rem;">0</div>
+        <div class="end-status" id="res-p1-status" style="font-size:1.1rem; letter-spacing:4px;">SECURED</div>
+        <div class="end-stats" style="grid-template-columns:1fr; gap:6px; margin-top:1rem;">
+          <div class="st"><div class="v" id="m1Purge" style="font-size:1.2rem;">0</div><div class="l">Purged</div></div>
+          <div class="st"><div class="v" id="m1Acc" style="font-size:1.2rem;">0%</div><div class="l">Sort Acc</div></div>
+        </div>
+      </div>
+
+      <div style="flex:1; background:rgba(255,45,85,0.05); border:1px solid var(--neon-red); padding:1.5rem; border-radius:12px; text-align:center;">
+        <div class="hud-label" id="res-p2-name" style="color:#fff; font-size:1rem;">PLAYER 2</div>
+        <div class="hud-big pink" id="res-p2-score" style="margin:0.8rem 0; font-size:2.5rem;">0</div>
+        <div class="end-status" id="res-p2-status" style="font-size:1.1rem; letter-spacing:4px;">BREACHED</div>
+        <div class="end-stats" style="grid-template-columns:1fr; gap:6px; margin-top:1rem;">
+          <div class="st"><div class="v" id="m2Purge" style="font-size:1.2rem;">0</div><div class="l">Purged</div></div>
+          <div class="st"><div class="v" id="m2Acc" style="font-size:1.2rem;">0%</div><div class="l">Sort Acc</div></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="end-btns">
+      <button id="btn-multi-rematch" class="btn">REMATCH</button>
+      <button id="btn-multi-menu" class="btn">MAIN MENU</button>
+    </div>
+  </div>
+
+  <canvas id="game-canvas"></canvas>
+</div>
+
+<!-- SCRIPTS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="js/timer.js"></script>
+<script src="js/score.js"></script>
+<script src="js/leaderboard.js"></script>
+<script src="js/player.js"></script>
+<script src="js/content.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>

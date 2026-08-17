@@ -1,0 +1,2 @@
+This game uses Three.js (r128) for the 3D office intro. To keep the game
+fully OFFLINE and compliant (no external network calls), it loads Three.js
