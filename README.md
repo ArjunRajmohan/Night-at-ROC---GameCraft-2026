@@ -86,8 +86,9 @@ Per screen column, a ray is projected through the grid map using **Digital Diffe
 3. Click **Enter the Floor**, walk to your workstation, log in, and defend the core.
 
 ---
-
 ## Project Structure
+
+```text
 Night-at-ROC
 ├── css/
 │   └── styles.css
@@ -103,6 +104,7 @@ Night-at-ROC
 ├── .gitignore
 ├── index.html            # Main markup and HUD overlay structure
 └── README.md             # Project documentation and briefing
+```
 
 ## Compliance Checklist (GameCraft 2026)
 - [x] Operator name captured and validated before gameplay (trimmed, non-empty, length-limited).
